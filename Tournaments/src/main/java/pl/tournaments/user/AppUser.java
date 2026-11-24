@@ -23,7 +23,22 @@ public class AppUser {
     private Role role;
 
     protected AppUser() {}
+    public AppUser(
+                   String nickname,
+                   String firstName,
+                   String lastName,
+                   String passwordHash,
+                   Role role){
+        this.nickname = nickname;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.passwordHash = passwordHash;
+        this.role = role;
+    }
 
+    public void setRole(Role r){
+        this.role = r;
+    }
     public Long getId() { return id; }
     public String getNickname() { return nickname; }
     public String getFirstName() { return firstName; }

@@ -1,0 +1,79 @@
+### 1. Rejestracja nowego użytkownika -> 201, rola PLAYER, brak hasła w odpowiedzi
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+  "nickname": "tester{{$randomInt}}",
+  "firstName": "Test",
+  "lastName": "Testowy",
+  "password": "haslo1234"
+}
+
+> {%
+    client.global.set("userId", response.body.id);
+    client.global.set("nickname", response.body.nickname);
+%}
+
+### 2. Lista użytkowników -> 200
+GET http://localhost:8080/api/users
+
+### 3. Pobranie nowego użytkownika po id -> 200
+GET http://localhost:8080/api/users/{{userId}}
+
+### 4. Zmiana roli na ORGANIZER -> 200, rola ORGANIZER
+PATCH http://localhost:8080/api/users/{{userId}}/role
+Content-Type: application/json
+
+{
+  "role": "ORGANIZER"
+}
+
+### 5. Ponowne pobranie -> rola dalej ORGANIZER (zmiana zapisała się w bazie)
+GET http://localhost:8080/api/users/{{userId}}
+
+### 6. Rejestracja z zajętym nickiem -> 409
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+  "nickname": "{{nickname}}",
+  "firstName": "Duplikat",
+  "lastName": "Duplikatowy",
+  "password": "haslo1234"
+}
+
+### 7a. Rejestracja bez nicka -> 400
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+  "firstName": "Bez",
+  "lastName": "Nicka",
+  "password": "haslo1234"
+}
+
+### 7b. Rejestracja ze za krótkim hasłem -> 400
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+  "nickname": "krotkiehaslo{{$randomInt}}",
+  "password": "ab"
+}
+
+### 8. Nieistniejący użytkownik -> 404
+GET http://localhost:8080/api/users/9999
+
+### 9. Zmiana roli z pustym ciałem -> 400
+PATCH http://localhost:8080/api/users/{{userId}}/role
+Content-Type: application/json
+
+{}
+
+### 10. Zmiana roli na nieistniejącą -> 400
+PATCH http://localhost:8080/api/users/{{userId}}/role
+Content-Type: application/json
+
+{
+  "role": "KROL"
+}
