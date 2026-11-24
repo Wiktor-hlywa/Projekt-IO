@@ -1,79 +1,107 @@
-### 1. Rejestracja nowego użytkownika -> 201, rola PLAYER, brak hasła w odpowiedzi
+### 1. Nowy użytkownik na kapitana -> 201
 POST http://localhost:8080/api/users
 Content-Type: application/json
 
 {
-  "nickname": "tester{{$randomInt}}",
-  "firstName": "Test",
+  "nickname": "kapitan{{$randomInt}}",
+  "firstName": "Kapitan",
   "lastName": "Testowy",
   "password": "haslo1234"
 }
 
+> {% client.global.set("captainId", response.body.id); %}
+
+### 2. Nowy użytkownik na członka -> 201
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+  "nickname": "czlonek{{$randomInt}}",
+  "firstName": "Czlonek",
+  "lastName": "Testowy",
+  "password": "haslo1234"
+}
+
+> {% client.global.set("memberId", response.body.id); %}
+
+### 3. Utworzenie drużyny -> 201, kapitan na liście members
+POST http://localhost:8080/api/teams
+Content-Type: application/json
+
+{
+  "name": "Druzyna {{$randomInt}}",
+  "captainId": {{captainId}}
+}
+
 > {%
-    client.global.set("userId", response.body.id);
-    client.global.set("nickname", response.body.nickname);
+    client.global.set("teamId", response.body.id);
+    client.global.set("teamName", response.body.name);
 %}
 
-### 2. Lista użytkowników -> 200
-GET http://localhost:8080/api/users
+### 4. Lista drużyn -> 200
+GET http://localhost:8080/api/teams
 
-### 3. Pobranie nowego użytkownika po id -> 200
-GET http://localhost:8080/api/users/{{userId}}
+### 5. Pobranie drużyny -> 200
+GET http://localhost:8080/api/teams/{{teamId}}
 
-### 4. Zmiana roli na ORGANIZER -> 200, rola ORGANIZER
-PATCH http://localhost:8080/api/users/{{userId}}/role
+### 6. Dodanie członka -> 200, dwa nicki w members
+POST http://localhost:8080/api/teams/{{teamId}}/members
 Content-Type: application/json
 
 {
-  "role": "ORGANIZER"
+  "userId": {{memberId}}
 }
 
-### 5. Ponowne pobranie -> rola dalej ORGANIZER (zmiana zapisała się w bazie)
-GET http://localhost:8080/api/users/{{userId}}
-
-### 6. Rejestracja z zajętym nickiem -> 409
-POST http://localhost:8080/api/users
+### 7. Ponowne dodanie tego samego członka -> 409
+POST http://localhost:8080/api/teams/{{teamId}}/members
 Content-Type: application/json
 
 {
-  "nickname": "{{nickname}}",
-  "firstName": "Duplikat",
-  "lastName": "Duplikatowy",
-  "password": "haslo1234"
+  "userId": {{memberId}}
 }
 
-### 7a. Rejestracja bez nicka -> 400
-POST http://localhost:8080/api/users
+### 8. Usunięcie członka -> 200, w members tylko kapitan
+DELETE http://localhost:8080/api/teams/{{teamId}}/members/{{memberId}}
+
+### 9. Ponowne usunięcie tego samego -> 404
+DELETE http://localhost:8080/api/teams/{{teamId}}/members/{{memberId}}
+
+### 10. Próba usunięcia kapitana -> 409
+DELETE http://localhost:8080/api/teams/{{teamId}}/members/{{captainId}}
+
+### 11. Drużyna o zajętej nazwie -> 409
+POST http://localhost:8080/api/teams
 Content-Type: application/json
 
 {
-  "firstName": "Bez",
-  "lastName": "Nicka",
-  "password": "haslo1234"
+  "name": "{{teamName}}",
+  "captainId": {{captainId}}
 }
 
-### 7b. Rejestracja ze za krótkim hasłem -> 400
-POST http://localhost:8080/api/users
+### 12. Drużyna z nieistniejącym kapitanem -> 404
+POST http://localhost:8080/api/teams
 Content-Type: application/json
 
 {
-  "nickname": "krotkiehaslo{{$randomInt}}",
-  "password": "ab"
+  "name": "Druzyna widmo {{$randomInt}}",
+  "captainId": 999999
 }
 
-### 8. Nieistniejący użytkownik -> 404
-GET http://localhost:8080/api/users/9999
-
-### 9. Zmiana roli z pustym ciałem -> 400
-PATCH http://localhost:8080/api/users/{{userId}}/role
-Content-Type: application/json
-
-{}
-
-### 10. Zmiana roli na nieistniejącą -> 400
-PATCH http://localhost:8080/api/users/{{userId}}/role
+### 13. Drużyna bez nazwy -> 400
+POST http://localhost:8080/api/teams
 Content-Type: application/json
 
 {
-  "role": "KROL"
+  "captainId": {{captainId}}
+}
+
+### 14. Nieistniejąca drużyna -> 404
+GET http://localhost:8080/api/teams/999999
+
+### 15. Dodanie nieistniejącego użytkownika -> 404
+POST http://localhost:8080/api/teams/{{teamId}}/members
+Content-Type: application/json
+
+{
+  "userId": 999999
 }
