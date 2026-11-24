@@ -1,0 +1,107 @@
+### 1. Nowy użytkownik na kapitana -> 201
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+  "nickname": "kapitan{{$randomInt}}",
+  "firstName": "Kapitan",
+  "lastName": "Testowy",
+  "password": "haslo1234"
+}
+
+> {% client.global.set("captainId", response.body.id); %}
+
+### 2. Nowy użytkownik na członka -> 201
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+  "nickname": "czlonek{{$randomInt}}",
+  "firstName": "Czlonek",
+  "lastName": "Testowy",
+  "password": "haslo1234"
+}
+
+> {% client.global.set("memberId", response.body.id); %}
+
+### 3. Utworzenie drużyny -> 201, kapitan na liście members
+POST http://localhost:8080/api/teams
+Content-Type: application/json
+
+{
+  "name": "Druzyna {{$randomInt}}",
+  "captainId": {{captainId}}
+}
+
+> {%
+    client.global.set("teamId", response.body.id);
+    client.global.set("teamName", response.body.name);
+%}
+
+### 4. Lista drużyn -> 200
+GET http://localhost:8080/api/teams
+
+### 5. Pobranie drużyny -> 200
+GET http://localhost:8080/api/teams/{{teamId}}
+
+### 6. Dodanie członka -> 200, dwa nicki w members
+POST http://localhost:8080/api/teams/{{teamId}}/members
+Content-Type: application/json
+
+{
+  "userId": {{memberId}}
+}
+
+### 7. Ponowne dodanie tego samego członka -> 409
+POST http://localhost:8080/api/teams/{{teamId}}/members
+Content-Type: application/json
+
+{
+  "userId": {{memberId}}
+}
+
+### 8. Usunięcie członka -> 200, w members tylko kapitan
+DELETE http://localhost:8080/api/teams/{{teamId}}/members/{{memberId}}
+
+### 9. Ponowne usunięcie tego samego -> 404
+DELETE http://localhost:8080/api/teams/{{teamId}}/members/{{memberId}}
+
+### 10. Próba usunięcia kapitana -> 409
+DELETE http://localhost:8080/api/teams/{{teamId}}/members/{{captainId}}
+
+### 11. Drużyna o zajętej nazwie -> 409
+POST http://localhost:8080/api/teams
+Content-Type: application/json
+
+{
+  "name": "{{teamName}}",
+  "captainId": {{captainId}}
+}
+
+### 12. Drużyna z nieistniejącym kapitanem -> 404
+POST http://localhost:8080/api/teams
+Content-Type: application/json
+
+{
+  "name": "Druzyna widmo {{$randomInt}}",
+  "captainId": 999999
+}
+
+### 13. Drużyna bez nazwy -> 400
+POST http://localhost:8080/api/teams
+Content-Type: application/json
+
+{
+  "captainId": {{captainId}}
+}
+
+### 14. Nieistniejąca drużyna -> 404
+GET http://localhost:8080/api/teams/999999
+
+### 15. Dodanie nieistniejącego użytkownika -> 404
+POST http://localhost:8080/api/teams/{{teamId}}/members
+Content-Type: application/json
+
+{
+  "userId": 999999
+}
