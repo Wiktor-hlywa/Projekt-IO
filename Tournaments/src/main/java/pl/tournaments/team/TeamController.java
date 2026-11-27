@@ -2,7 +2,9 @@ package pl.tournaments.team;
 
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import pl.tournaments.security.AuthenticatedUser;
 import pl.tournaments.team.dto.AddMemberRequest;
 import pl.tournaments.team.dto.CreateTeamRequest;
 import pl.tournaments.team.dto.TeamResponse;
@@ -20,8 +22,9 @@ public class TeamController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public TeamResponse create(@Valid @RequestBody CreateTeamRequest req){
-        return service.create(req);
+    public TeamResponse create(@Valid @RequestBody CreateTeamRequest req,
+                               @AuthenticationPrincipal AuthenticatedUser currentUser){
+        return service.create(req, currentUser.id());
     }
 
     @GetMapping
@@ -35,12 +38,14 @@ public class TeamController {
     }
 
     @PostMapping("/{id}/members")
-    public TeamResponse addMember(@PathVariable Long id,@Valid @RequestBody AddMemberRequest req){
-        return service.addMember(id, req.userId());
+    public TeamResponse addMember(@PathVariable Long id,@Valid @RequestBody AddMemberRequest req,
+    @AuthenticationPrincipal AuthenticatedUser currentUser){
+        return service.addMember(id, req.userId(), currentUser.id());
     }
     @DeleteMapping("/{id}/members/{userId}")
-    public TeamResponse removeMember(@PathVariable Long id, @PathVariable Long userId){
-        return service.removeMember(id, userId);
+    public TeamResponse removeMember(@PathVariable Long id, @PathVariable Long userId,
+                                     @AuthenticationPrincipal AuthenticatedUser currentUser){
+        return service.removeMember(id, userId, currentUser.id());
     }
 
 }

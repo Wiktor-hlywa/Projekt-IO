@@ -2,7 +2,9 @@ package pl.tournaments.user;
 
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import pl.tournaments.security.AuthenticatedUser;
 import pl.tournaments.user.dto.ChangeRoleRequest;
 import pl.tournaments.user.dto.RegisterRequest;
 import pl.tournaments.user.dto.UserResponse;
@@ -36,6 +38,11 @@ public class UserController {
     @PatchMapping("/{id}/role")
     public UserResponse changeRole(@PathVariable Long id, @Valid @RequestBody ChangeRoleRequest req){
         return service.changeRole(id, req.role());
+    }
+
+    @GetMapping("/me")
+    public UserResponse getDataFromAuthenticated(@AuthenticationPrincipal AuthenticatedUser user){
+        return service.getById(user.id());
     }
 
 
