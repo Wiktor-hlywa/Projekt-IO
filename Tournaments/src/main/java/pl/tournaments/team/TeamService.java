@@ -31,12 +31,12 @@ public class TeamService {
     }
 
     @Transactional
-    public TeamResponse create(CreateTeamRequest req){
+    public TeamResponse create(CreateTeamRequest req, Long captainId){
         if(repoTeam.existsByName(req.name())){
             throw new ResponseStatusException(HttpStatus.CONFLICT, "suck my dick");
 
         }
-        AppUser captain = getUser(req.captainId());
+        AppUser captain = getUser(captainId);
         Team createdTeam = new Team(req.name(), captain);
         createdTeam.getMembers().add(captain);
         repoTeam.save(createdTeam);
@@ -49,7 +49,8 @@ public class TeamService {
     }
 
     @Transactional
-    public TeamResponse addMember(Long teamId, Long userId){
+    public TeamResponse addMember(Long teamId, Long userId, Long currentUserId){
+        this.requireCaptain(getTeam(teamId), currentUserId);
         Team team = getTeam(teamId);
         if(!team.getMembers().add(getUser(userId))){
             throw new ResponseStatusException(HttpStatus.CONFLICT, "piss off");
@@ -59,7 +60,8 @@ public class TeamService {
     }
 
     @Transactional
-    public TeamResponse removeMember(Long teamId, Long userId){
+    public TeamResponse removeMember(Long teamId, Long userId, Long currentUserId){
+        this.requireCaptain(getTeam(teamId), currentUserId);
         Team team = getTeam(teamId);
         if(team.getCaptain() != null &&team.getCaptain().getId().equals(userId)){
             throw new ResponseStatusException(HttpStatus.CONFLICT, "poop");
@@ -76,6 +78,12 @@ public class TeamService {
         return repoTeam.findAll().stream()
                 .map(TeamResponse::from)
                 .toList();
+    }
+
+    private void requireCaptain(Team team, Long currentUserId){
+        if(team.getCaptain() == null || !team.getCaptain().getId().equals(currentUserId)){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "poop");
+        }
     }
 
 

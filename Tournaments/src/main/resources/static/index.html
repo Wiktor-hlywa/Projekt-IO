@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Platforma turniejowa</title>
+</head>
+<body>
+
+<h1>Platforma turniejowa</h1>
+
+<h2>Logowanie</h2>
+<p>
+    Nick: <input id="loginNick"><br>
+    Hasło: <input id="loginPass" type="password"><br>
+    <button onclick="login()">Zaloguj się</button>
+</p>
+
+<h2>Rejestracja</h2>
+<p>
+    Nick: <input id="regNick"><br>
+    Imię: <input id="regFirst"><br>
+    Nazwisko: <input id="regLast"><br>
+    Hasło: <input id="regPass" type="password"><br>
+    <button onclick="register()">Zarejestruj się</button>
+</p>
+
+<p id="msg"></p>
+
+<script>
+    const $ = id => document.getElementById(id);
+
+    async function login() {
+        const res = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nickname: $('loginNick').value, password: $('loginPass').value })
+        });
+        if (res.ok) {
+            window.location.href = 'app.html';
+        } else if (res.status === 401) {
+            $('msg').textContent = 'Zły nick lub hasło';
+        } else {
+            $('msg').textContent = 'Uzupełnij nick i hasło';
+        }
+    }
+
+    async function register() {
+        const res = await fetch('/api/users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                nickname: $('regNick').value,
+                firstName: $('regFirst').value,
+                lastName: $('regLast').value,
+                password: $('regPass').value
+            })
+        });
+        if (res.ok) {
+            $('loginNick').value = $('regNick').value;
+            $('msg').textContent = 'Konto utworzone, możesz się zalogować.';
+        } else if (res.status === 409) {
+            $('msg').textContent = 'Ten nick jest już zajęty';
+        } else {
+            $('msg').textContent = 'Sprawdź dane: nick jest wymagany, hasło min. 4 znaki';
+        }
+    }
+
+    // jeśli sesja już istnieje, od razu do panelu
+    fetch('/api/users/me').then(res => { if (res.ok) window.location.href = 'app.html'; });
+</script>
+</body>
+</html>

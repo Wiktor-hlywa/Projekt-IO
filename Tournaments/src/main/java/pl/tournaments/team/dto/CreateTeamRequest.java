@@ -5,7 +5,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public record CreateTeamRequest(
-        @Size(min = 2, max = 100) @NotBlank String name,
-        @NotNull Long captainId
+        @Size(min = 2, max = 100) @NotBlank String name
 ) {
 }

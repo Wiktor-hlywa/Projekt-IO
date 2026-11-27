@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Platforma turniejowa - panel</title>
+</head>
+<body>
+
+<p><span id="who"></span> <button onclick="logout()">Wyloguj</button></p>
+<hr>
+
+<p>
+    <button onclick="showMe()">Moje dane</button>
+    <button onclick="showUsers()">Użytkownicy</button>
+    <button onclick="showTeams()">Drużyny</button>
+    <button onclick="soon('Turnieje')">Turnieje</button>
+    <button onclick="soon('Utwórz turniej')">Utwórz turniej</button>
+    <button onclick="soon('Zapisz się na turniej')">Zapisz się na turniej</button>
+    <button onclick="soon('Drabinka')">Drabinka</button>
+    <button onclick="soon('Wpisz wynik meczu')">Wpisz wynik meczu</button>
+</p>
+<hr>
+
+<div id="content">Wybierz opcję.</div>
+
+<script>
+    const $ = id => document.getElementById(id);
+
+    function table(rows, columns, headers) {
+        if (!rows || rows.length === 0) return '<p>Brak danych.</p>';
+        const head = headers.map(h => `<th>${h}</th>`).join('');
+        const body = rows.map(r =>
+            '<tr>' + columns.map(c => `<td>${Array.isArray(r[c]) ? r[c].join(', ') : (r[c] ?? '')}</td>`).join('') + '</tr>'
+        ).join('');
+        return `<table border="1"><tr>${head}</tr>${body}</table>`;
+    }
+
+    async function showMe() {
+        const me = await (await fetch('/api/users/me')).json();
+        $('content').innerHTML = `
+    <h3>Moje dane</h3>
+    Nick: ${me.nickname}<br>
+    Imię i nazwisko: ${me.firstName ?? ''} ${me.lastName ?? ''}<br>
+    Rola: ${me.role}`;
+    }
+
+    async function showUsers() {
+        const users = await (await fetch('/api/users')).json();
+        $('content').innerHTML = '<h3>Użytkownicy</h3>' +
+            table(users, ['id', 'nickname', 'firstName', 'lastName', 'role'], ['ID', 'Nick', 'Imię', 'Nazwisko', 'Rola']);
+    }
+
+    async function showTeams() {
+        const teams = await (await fetch('/api/teams')).json();
+        $('content').innerHTML = '<h3>Drużyny</h3>' +
+            table(teams, ['id', 'name', 'captainNickname', 'members'], ['ID', 'Nazwa', 'Kapitan', 'Członkowie']);
+    }
+
+    function soon(name) {
+        $('content').innerHTML = `<h3>${name}</h3>Funkcja w przygotowaniu.`;
+    }
+
+    async function logout() {
+        await fetch('/api/auth/logout', { method: 'POST' });
+        window.location.href = 'index.html';
+    }
+
+    // przy wejściu: kto jest zalogowany? jeśli nikt -> na stronę logowania
+    fetch('/api/users/me').then(async res => {
+        if (!res.ok) { window.location.href = 'index.html'; return; }
+        const me = await res.json();
+        $('who').textContent = `Zalogowany: ${me.nickname} (${me.role})`;
+    });
+</script>
+</body>
+</html>
