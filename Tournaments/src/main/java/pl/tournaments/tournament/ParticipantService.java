@@ -32,7 +32,7 @@ public class ParticipantService {
         requirePlayer(u);
         requireNotRegisteredToTournament(tournamentId, userId);
 
-            participantRepo.save(Participant.ofUser(t, u));
+        participantRepo.save(Participant.ofUser(t, u));
         }
 
     @Transactional

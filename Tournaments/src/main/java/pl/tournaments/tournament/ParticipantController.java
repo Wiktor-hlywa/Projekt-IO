@@ -18,13 +18,13 @@ public class ParticipantController {
         this.service = service;
     }
 
-    @PostMapping
+    @PostMapping("/players")
     @ResponseStatus(HttpStatus.CREATED)
     public void registerPlayer(@PathVariable Long tournamentId, @RequestParam Long userId) {
         service.registerPlayer(tournamentId, userId);
     }
 
-    @PostMapping 
+    @PostMapping("/teams")
     @ResponseStatus (HttpStatus.CREATED)
     public void registerTeam(@PathVariable Long tournamentId, @RequestParam Long teamId) {
         service.registerTeam(tournamentId, teamId);
