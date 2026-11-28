@@ -20,7 +20,7 @@ public class ParticipantController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public void register(@PathVariable Long tournamentId, @RequestParam Long userId) {
+    public void registerPlayer(@PathVariable Long tournamentId, @RequestParam Long userId) {
         service.registerPlayer(tournamentId, userId);
     }
 

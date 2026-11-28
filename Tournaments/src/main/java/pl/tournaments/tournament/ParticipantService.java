@@ -26,8 +26,8 @@ public class ParticipantService {
 
     @Transactional 
     public void registerPlayer(Long tournamentId, Long userId) {        
-        Tournament t = tournamentRepo.findById(tournamentId).orElseThrow(() -> new IllegalArgumentException("Nie znaleziono turnieju"));
-        AppUser u = userRepo.findById(userId).orElseThrow(() -> new IllegalArgumentException("Nie znaleziono użytkownika"));
+        Tournament t = getTournament(tournamentId);
+        AppUser u = getAppUser(userId);
 
         requirePlayer(u);
         requireNotRegisteredToTournament(tournamentId, userId);
@@ -36,9 +36,9 @@ public class ParticipantService {
         }
 
     @Transactional
-    public void registerTeam(Long tournamentId, Long teamId) {
-        Tournament t = tournamentRepo.findById(tournamentId).orElseThrow(() -> new IllegalArgumentException("Nie znaleziono turnieju"));
-        Team team = teamRepo.findById(teamId).orElseThrow(() -> new IllegalArgumentException("Nie znaleziono drużyny"));
+    public void registerTeam(Long tournamentId, Long teamId) { // Jeśli rejestruję drużynę, to nie wszyscy członkowie grają w turnieju
+        Tournament t = getTournament(tournamentId);
+        Team team = getTeam(teamId);
 
         participantRepo.save(Participant.ofTeam(t, team));
     }
@@ -51,8 +51,20 @@ public class ParticipantService {
         participantRepo.delete(p);  // Tutaj usuniemy uczestnika z turnieju, więc w trakcie generowania drabinki będą problemy, bo nie będzie uczestnika. Lepiej ustawić enuma na withdrawn i filtrować w drabince tylko aktywnych uczestników
     }
 
+    private Tournament getTournament(Long tournamentId) {
+        return tournamentRepo.findById(tournamentId).orElseThrow(() -> new IllegalArgumentException("Nie znaleziono turnieju"));
+    }
+
+    private Team getTeam(Long teamId) {
+        return teamRepo.findById(teamId).orElseThrow(() -> new IllegalArgumentException("Nie znaleziono drużyny"));
+    }
+
+    private AppUser getAppUser(Long userId) {
+        return userRepo.findById(userId).orElseThrow(() -> new IllegalArgumentException("Nie znaleziono użytkownika"));
+    }
+
     private void requireNotRegisteredToTournament(Long tournamentId, Long userId) {
-        if (participantRepo.findByTournamentIdAndUserId(tournamentId, userId).isPresent()) {
+        if (participantRepo.existsByTournamentIdAndUserId(tournamentId, userId)) {
             throw new IllegalArgumentException("Gracz jest już zapisany do turnieju");
         }
     }
